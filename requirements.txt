@@ -1,0 +1,32 @@
+# Core Flask dependencies for web server
+flask==3.1.1
+flask-cors==6.0.0
+flask-jwt-extended==4.7.1
+gunicorn
+
+# Firebase dependencies for authentication and database
+firebase-admin==6.8.0
+pyrebase4
+
+# AI and ML dependencies
+openai==1.82.0
+torch==2.7.0
+numpy==2.2.6
+
+# Audio processing dependencies
+librosa==0.11.0
+gdown==5.2.0
+
+# Data processing dependencies
+pandas==2.2.3
+pydantic==2.11.5
+requests==2.32.3
+beautifulsoup4==4.13.4
+
+# Utility dependencies
+python-dotenv==1.1.0
+pathlib
+
+# Development and testing
+pytest
+pytest-asyncio

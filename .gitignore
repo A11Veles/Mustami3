@@ -1,0 +1,19 @@
+# Python bytecode
+__pycache__/
+
+# Virtual environments
+.env
+venv/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Sensitive files
+login-callcenteragent-firebase-adminsdk-fbsvc-534a7da65f.json
+
+# Generated outputs (ignore contents, keep directory)
+outputs/*
