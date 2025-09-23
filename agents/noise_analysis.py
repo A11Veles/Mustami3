@@ -28,7 +28,8 @@ class NoiseAnalysisAgent:
         try:
             # Basic audio analysis
             audio_stats = self._extract_audio_stats(audio_path)
-            
+            audio_stats['audio_path'] = audio_path  # Add path for quality metrics calculation
+
             # Calculate quality metrics
             quality_metrics = self._calculate_quality_metrics(audio_stats)
             
@@ -89,7 +90,6 @@ class NoiseAnalysisAgent:
                     "sample_width": sample_width,
                     "duration": duration,
                     "frames": frames,
-                    "audio_data": audio_data,
                     "file_size_mb": os.path.getsize(audio_path) / (1024 * 1024)
                 }
                 
@@ -99,7 +99,29 @@ class NoiseAnalysisAgent:
     def _calculate_quality_metrics(self, audio_stats: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate audio quality metrics."""
         try:
-            audio_data = audio_stats['audio_data']
+            # Extract audio data for calculations
+            audio_path = audio_stats.get('audio_path')
+            if not audio_path:
+                raise Exception("Audio path not provided for quality metrics calculation")
+
+            with wave.open(audio_path, 'rb') as wav_file:
+                frames = wav_file.getnframes()
+                sample_width = wav_file.getsampwidth()
+                channels = wav_file.getnchannels()
+                raw_data = wav_file.readframes(frames)
+
+                # Convert to numpy array
+                if sample_width == 1:
+                    audio_data = np.frombuffer(raw_data, dtype=np.int8)
+                elif sample_width == 2:
+                    audio_data = np.frombuffer(raw_data, dtype=np.int16)
+                else:
+                    audio_data = np.frombuffer(raw_data, dtype=np.int32)
+
+                # Handle stereo by taking first channel
+                if channels > 1:
+                    audio_data = audio_data[::channels]
+
             sample_rate = audio_stats['sample_rate']
             
             # Convert to float for calculations
