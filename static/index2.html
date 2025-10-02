@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mustami3 - AI Call Analysis Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .dashboard-container {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        /* Holographic gradient effects */
+        .holo-gradient {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.2);
+        }
+        
+        .holo-border {
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), inset 0 0 20px rgba(139, 92, 246, 0.05);
+        }
+        
+        /* Card styles */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .glass-card:hover::before {
+            left: 100%;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* Header styles */
+        .header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            animation: slideDown 0.6s ease-out;
+        }
+        
+        .brand-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s infinite;
+            letter-spacing: 2px;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+            50% { filter: hue-rotate(10deg) brightness(1.2); }
+        }
+        
+        /* Score gauge */
+        .score-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        .score-circle {
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6));
+        }
+        
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        /* Waveform styles */
+        .waveform-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            gap: 2px;
+            position: relative;
+        }
+        
+        .waveform-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+        }
+        
+        .waveform-bar:hover {
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
+            transform: scaleY(1.05);
+        }
+        
+        /* Waveform overlay regions */
+        .waveform-overlay {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .overlay-interruption {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.1) 100%);
+            border: 2px solid rgba(239, 68, 68, 0.6);
+            border-top: none;
+            border-bottom: none;
+        }
+        
+        .overlay-overtalk {
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.3) 0%, rgba(251, 191, 36, 0.1) 100%);
+            border: 2px solid rgba(251, 191, 36, 0.6);
+            border-top: none;
+            border-bottom: none;
+        }
+        
+        .overlay-silence {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 2px solid rgba(59, 130, 246, 0.6);
+            border-top: none;
+            border-bottom: none;
+        }
+        
+        .overlay-keyword {
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.6);
+            border-top: none;
+            border-bottom: none;
+        }
+        
+        /* Overlay labels */
+        .overlay-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            white-space: nowrap;
+            pointer-events: all;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .overlay-label:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .label-interruption {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+        
+        .label-overtalk {
+            background: rgba(251, 191, 36, 0.9);
+            color: #1f2937;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+        }
+        
+        .label-silence {
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        
+        .label-keyword {
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+        
+        /* Timeline markers */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        /* Play button */
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+            flex-shrink: 0;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.8);
+        }
+        
+        /* Keyword tags */
+        .keyword-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .keyword-tag:hover {
+            background: rgba(139, 92, 246, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+        }
+        
+        .keyword-freq {
+            background: rgba(168, 85, 247, 0.5);
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(55, 65, 81, 0.5);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        /* Compliance items */
+        .compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .compliance-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        
+        .check-icon.success {
+            background: rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .check-icon.fail {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Topic tags */
+        .topic-tag {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .topic-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5);
+        }
+        
+        /* Insights card */
+        .insight-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 15px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            animation: rotate 4s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .insight-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Transcript styles */
+        .transcript-container {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .transcript-container.collapsed {
+            max-height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .transcript-container.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.95));
+            pointer-events: none;
+        }
+        
+        .transcript-container.expanded {
+            max-height: none;
+        }
+        
+        .transcript-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .transcript-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .transcript-content::-webkit-scrollbar-track {
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 10px;
+        }
+        
+        .transcript-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        
+        .transcript-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        }
+        
+        .transcript-line {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(139, 92, 246, 0.05);
+            border-left: 3px solid transparent;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .transcript-line:hover {
+            background: rgba(139, 92, 246, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .transcript-line.agent {
+            border-left-color: #6366f1;
+        }
+        
+        .transcript-line.customer {
+            border-left-color: #a855f7;
+        }
+        
+        .transcript-time {
+            color: #8b5cf6;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+        
+        .transcript-speaker {
+            color: #c4b5fd;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        
+        .transcript-text {
+            color: #e0e7ff;
+            line-height: 1.6;
+        }
+        
+        .expand-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 10px;
+            color: #c4b5fd;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .expand-btn:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* Summary card */
+        .summary-text {
+            color: #e0e7ff;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+        
+        /* Legend items */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+        
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        /* Grid layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .brand-logo {
+                font-size: 1.5rem;
+            }
+            
+            .overlay-label {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.5rem;
+            }
+        }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        /* Sentiment glow effect */
+        .sentiment-positive {
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .sentiment-negative {
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Info badge */
+        .info-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        /* Section title */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #e0e7ff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-icon {
+            color: #a855f7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="brand-logo">MUSTAMI3</div>
+                <div class="flex flex-wrap items-center gap-6 text-sm">
+                    <div class="info-badge">
+                        <i class="fas fa-user mr-2"></i>Agent: Mahmoud Khaled
+                    </div>
+                    <div class="info-badge">
+                        <i class="fas fa-phone mr-2"></i>Call ID: C123456
+                    </div>
+                    <div class="info-badge">
+                        <i class="fas fa-calendar mr-2"></i>Date: 2025-06-09
+                    </div>
+                    <div class="info-badge">
+                        <i class="fas fa-clock mr-2"></i>Duration: 12:45
+                    </div>
+                    <div class="info-badge">
+                        <i class="fas fa-user-circle mr-2"></i>Customer: Zyad Ahmed
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Overall Score Gauge -->
+            <div class="glass-card" style="grid-column: span 4;">
+                <div class="section-title">
+                    <i class="fas fa-gauge-high section-icon"></i>
+                    Overall Call Quality Score
+                </div>
+                <div class="score-container">
+                    <svg class="score-circle" width="200" height="200">
+                        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(139, 92, 246, 0.2)" stroke-width="12"/>
+                        <circle id="scoreCircle" cx="100" cy="100" r="90" fill="none" stroke="url(#gradient)" stroke-width="12" stroke-dasharray="565.48" stroke-dashoffset="141.37" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="score-text">85</div>
+                </div>
+                <div class="text-center mt-4 text-sm text-gray-400">Excellent Performance</div>
+            </div>
+            
+            <!-- Sentiment Timeline -->
+            <div class="glass-card" style="grid-column: span 8;">
+                <div class="section-title">
+                    <i class="fas fa-chart-line section-icon"></i>
+                    Customer Sentiment Timeline
+                </div>
+                <div class="chart-container">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Talk Time Donut -->
+            <div class="glass-card" style="grid-column: span 4;">
+                <div class="section-title">
+                    <i class="fas fa-comments section-icon"></i>
+                    Talk Time Distribution
+                </div>
+                <div class="chart-container">
+                    <canvas id="talkTimeChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Compliance Checklist -->
+            <div class="glass-card" style="grid-column: span 4;">
+                <div class="section-title">
+                    <i class="fas fa-clipboard-check section-icon"></i>
+                    Compliance Checklist
+                </div>
+                <div class="space-y-2">
+                    <div class="compliance-item">
+                        <div class="check-icon success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span>Greeting</span>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="check-icon success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span>Verification</span>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="check-icon fail">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <span>Closing</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Noise Level Chart -->
+            <div class="glass-card" style="grid-column: span 4;">
+                <div class="section-title">
+                    <i class="fas fa-volume-high section-icon"></i>
+                    Noise Level Analysis
+                </div>
+                <div class="chart-container">
+                    <canvas id="noiseLevelChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Audio Waveform with Metrics -->
+            <div class="glass-card" style="grid-column: span 12;">
+                <div class="section-title">
+                    <i class="fas fa-waveform-lines section-icon"></i>
+                    Audio Waveform & Call Quality Analysis
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="play-btn" onclick="togglePlay()">
+                        <i class="fas fa-play text-white text-xl" id="playIcon"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="waveform-container">
+                            <div class="waveform" id="waveform">
+                                <!-- Waveform bars will be generated by JS -->
+                            </div>
+                            
+                            <!-- Overlay regions for metrics -->
+                            <div class="waveform-overlay overlay-interruption" style="left: 15%; width: 8%;">
+                                <div class="overlay-label label-interruption">Interruption (0:23)</div>
+                            </div>
+                            
+                            <div class="waveform-overlay overlay-overtalk" style="left: 35%; width: 10%;">
+                                <div class="overlay-label label-overtalk">Overtalk (0:54)</div>
+                            </div>
+                            
+                            <div class="waveform-overlay overlay-silence" style="left: 52%; width: 6%;">
+                                <div class="overlay-label label-silence">Silence (1:18)</div>
+                            </div>
+                            
+                            <div class="waveform-overlay overlay-keyword" style="left: 70%; width: 8%;">
+                                <div class="overlay-label label-keyword">Key Phrase (1:45)</div>
+                            </div>
+                            
+                            <div class="waveform-overlay overlay-interruption" style="left: 85%; width: 7%;">
+                                <div class="overlay-label label-interruption">Interruption (2:08)</div>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <span>0:00</span>
+                            <span>0:30</span>
+                            <span>1:00</span>
+                            <span>1:30</span>
+                            <span>2:00</span>
+                            <span>2:27</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="flex flex-wrap gap-6 mt-4">
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: rgba(239, 68, 68, 0.3); border-color: #ef4444;"></div>
+                        <span>Interruptions (2)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: rgba(251, 191, 36, 0.3); border-color: #fbbf24;"></div>
+                        <span>Overtalk (1.8 min)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: rgba(59, 130, 246, 0.3); border-color: #3b82f6;"></div>
+                        <span>Silence (3.2 min)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: rgba(16, 185, 129, 0.3); border-color: #10b981;"></div>
+                        <span>Key Phrases</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Call Summary -->
+            <div class="glass-card" style="grid-column: span 12;">
+                <div class="section-title">
+                    <i class="fas fa-file-lines section-icon"></i>
+                    Call Summary
+                </div>
+                <div class="insight-card">
+                    <div class="insight-content">
+                        <p class="summary-text">
+                            Customer David contacted ConnectNet regarding an unauthorized charge of $15 for a "Speed Boost" internet upgrade that appeared on his bill. Agent Sarah promptly investigated the issue, identified it as a mistakenly applied promotion from September 15th, and processed an immediate credit reversal. The agent also removed the feature from the account to prevent future occurrences and confirmed the customer's monthly rate would return to the original $60. The customer expressed satisfaction with the resolution. However, the agent did not follow proper closing protocol, which is noted as an area for improvement.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transcript -->
+            <div class="glass-card" style="grid-column: span 12;">
+                <div class="section-title">
+                    <i class="fas fa-file-text section-icon"></i>
+                    Call Transcript
+                </div>
+                <div class="transcript-container collapsed" id="transcriptContainer">
+                    <div class="transcript-content" id="transcriptContent">
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">0:05</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">Thank you for calling ConnectNet. My name is Sarah. Can I please have your account number or the phone number associated with your account?</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">0:15</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">Hi Sarah, yes. The phone number is 555-123-4567.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">0:25</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">Thank you. I see your account here. How can I help you today?</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">0:30</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">I'm calling about my latest bill. I was charged for an internet upgrade, but I never authorized or requested that. It looks like my monthly total went up by $15.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">0:45</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">Okay, I'm looking at your billing history now. I see the charge you're referring to, labeled as "Speed Boost." It was added on September 15th. I apologize for any confusion this has caused.</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">1:00</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">Yeah, I have no idea how that got on there. I'm on the same plan I've had for a year. I'd like to get that charge removed and make sure it doesn't happen again.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">1:10</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">I understand. I can see there was a promotion applied to your account on that date, but it seems it was mistakenly added. I can certainly get that charge reversed for you. I'm processing a credit of $15 to your account right now.</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">1:35</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">Great, thank you.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">1:40</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">You're welcome. The credit should appear on your next billing statement. To ensure this doesn't happen again, I'm also removing that feature from your account completely. Your monthly charge will return to the original rate of $60.</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">1:55</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">Perfect. So I'll just pay the $60, and I'll see the credit on the next bill, right?</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">2:05</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">That's correct. Your current balance will be adjusted to reflect the $15 credit. Is there anything else I can help you with today?</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">2:15</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">No, that's it. Thanks for your help, Sarah.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">2:20</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">My pleasure, David. Thank you for being a ConnectNet customer. Have a great day.</span>
+                        </div>
+                        
+                        <div class="transcript-line customer">
+                            <span class="transcript-time">2:25</span>
+                            <span class="transcript-speaker">(Customer):</span>
+                            <span class="transcript-text">You too. Bye.</span>
+                        </div>
+                        
+                        <div class="transcript-line agent">
+                            <span class="transcript-time">2:27</span>
+                            <span class="transcript-speaker">(Agent):</span>
+                            <span class="transcript-text">Bye.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="expand-btn" onclick="toggleTranscript()">
+                    <span id="expandText">Expand Full Transcript</span>
+                    <i class="fas fa-chevron-down expand-icon" id="expandIcon"></i>
+                </div>
+            </div>
+            
+            <!-- Topic -->
+            <div class="glass-card" style="grid-column: span 6;">
+                <div class="section-title">
+                    <i class="fas fa-tags section-icon"></i>
+                    Call Topics
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <span class="topic-tag">Billing Issue</span>
+                    <span class="topic-tag">Unauthorized Charge</span>
+                    <span class="topic-tag">Credit Reversal</span>
+                </div>
+            </div>
+            
+            <!-- Keyword Cloud -->
+            <div class="glass-card" style="grid-column: span 6;">
+                <div class="section-title">
+                    <i class="fas fa-key section-icon"></i>
+                    Key Phrases & Frequency
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <div class="keyword-tag">
+                        <span>billing</span>
+                        <span class="keyword-freq">4x</span>
+                    </div>
+                    <div class="keyword-tag">
+                        <span>charge</span>
+                        <span class="keyword-freq">6x</span>
+                    </div>
+                    <div class="keyword-tag">
+                        <span>credit</span>
+                        <span class="keyword-freq">3x</span>
+                    </div>
+                    <div class="keyword-tag">
+                        <span>account</span>
+                        <span class="keyword-freq">5x</span>
+                    </div>
+                    <div class="keyword-tag">
+                        <span>Speed Boost</span>
+                        <span class="keyword-freq">2x</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actionable Insights -->
+            <div class="glass-card" style="grid-column: span 8;">
+                <div class="section-title">
+                    <i class="fas fa-lightbulb section-icon"></i>
+                    AI-Generated Actionable Insights
+                </div>
+                <div class="insight-card">
+                    <div class="insight-content">
+                        <p class="text-sm leading-relaxed text-gray-300">
+                            <strong class="text-purple-300">Recommendation:</strong> Agent Sarah demonstrated excellent problem-solving skills and empathy throughout the call. The issue was resolved efficiently with a clear explanation and preventive measures. However, the closing protocol was not followed properly - consider implementing an automated checklist reminder system. The customer's sentiment improved significantly after the credit reversal confirmation, indicating effective communication. This interaction should be used as a training example for handling billing disputes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Toggles -->
+            <div class="glass-card" style="grid-column: span 4;">
+                <div class="section-title">
+                    <i class="fas fa-sliders section-icon"></i>
+                    Actions
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Mark as Reviewed</span>
+                        <div class="toggle-switch" onclick="toggleSwitch(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Escalate</span>
+                        <div class="toggle-switch" onclick="toggleSwitch(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    <script>
+        // Particles.js configuration
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: ['#6366f1', '#a855f7', '#ec4899'] },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1 } },
+                size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1 } },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#8b5cf6',
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 1,
+                    direction: 'none',
+                    random: true,
+                    straight: false,
+                    out_mode: 'out',
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'repulse' },
+                    onclick: { enable: true, mode: 'push' },
+                    resize: true
+                },
+                modes: {
+                    repulse: { distance: 100, duration: 0.4 },
+                    push: { particles_nb: 4 }
+                }
+            },
+            retina_detect: true
+        });
+        
+        // Generate static waveform bars with varying heights
+        const waveform = document.getElementById('waveform');
+        const waveformData = [
+            20, 35, 45, 30, 50, 60, 55, 40, 65, 70, 60, 45, 55, 75, 80, 70, 60, 50, 65, 75,
+            85, 80, 70, 60, 55, 65, 70, 75, 65, 55, 50, 60, 70, 75, 70, 60, 50, 45, 55, 65,
+            70, 65, 55, 50, 60, 70, 80, 75, 65, 55, 50, 45, 40, 50, 60, 70, 75, 70, 60, 50,
+            45, 55, 65, 75, 80, 75, 65, 55, 50, 60, 70, 75, 70, 60, 50, 45, 55, 65, 70, 65,
+            55, 50, 45, 40, 50, 60, 70, 65, 55, 50, 45, 40, 35, 30, 25, 20, 25, 30, 35, 30
+        ];
+        
+        waveformData.forEach(height => {
+            const bar = document.createElement('div');
+            bar.className = 'waveform-bar';
+            bar.style.height = `${height}%`;
+            waveform.appendChild(bar);
+        });
+        
+        // Play button toggle
+        let isPlaying = false;
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const icon = document.getElementById('playIcon');
+            icon.className = isPlaying ? 'fas fa-pause text-white text-xl' : 'fas fa-play text-white text-xl';
+        }
+        
+        // Toggle switch
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+        
+        // Transcript expand/collapse
+        function toggleTranscript() {
+            const container = document.getElementById('transcriptContainer');
+            const expandText = document.getElementById('expandText');
+            const expandIcon = document.getElementById('expandIcon');
+            
+            if (container.classList.contains('collapsed')) {
+                container.classList.remove('collapsed');
+                container.classList.add('expanded');
+                expandText.textContent = 'Collapse Transcript';
+                expandIcon.style.transform = 'rotate(180deg)';
+            } else {
+                container.classList.add('collapsed');
+                container.classList.remove('expanded');
+                expandText.textContent = 'Expand Full Transcript';
+                expandIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Chart.js configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { color: '#e0e7ff', font: { size: 11 } }
+                }
+            }
+        };
+        
+        // Sentiment Timeline Chart
+        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+        const sentimentGradient = sentimentCtx.createLinearGradient(0, 0, 0, 250);
+        sentimentGradient.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+        sentimentGradient.addColorStop(1, 'rgba(239, 68, 68, 0.5)');
+        
+        new Chart(sentimentCtx, {
+            type: 'line',
+            data: {
+                labels: ['0:00', '0:30', '1:00', '1:30', '2:00', '2:30'],
+                datasets: [{
+                    label: 'Sentiment Score',
+                    data: [70, 35, 40, 65, 75, 80],
+                    borderColor: '#a855f7',
+                    backgroundColor: sentimentGradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#a855f7',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                    }
+                }
+            }
+        });
+        
+        // Talk Time Donut Chart
+        const talkTimeCtx = document.getElementById('talkTimeChart').getContext('2d');
+        new Chart(talkTimeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Agent', 'Customer'],
+                datasets: [{
+                    data: [58, 42],
+                    backgroundColor: [
+                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(168, 85, 247, 0.8)'
+                    ],
+                    borderColor: [
+                        '#6366f1',
+                        '#a855f7'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                ...chartOptions,
+                cutout: '70%',
+                plugins: {
+                    ...chartOptions.plugins,
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: '#e0e7ff', font: { size: 12 } }
+                    }
+                }
+            }
+        });
+        
+        // Noise Level Chart
+        const noiseLevelCtx = document.getElementById('noiseLevelChart').getContext('2d');
+        const noiseLevelGradient = noiseLevelCtx.createLinearGradient(0, 0, 0, 250);
+        noiseLevelGradient.addColorStop(0, 'rgba(251, 191, 36, 0.6)');
+        noiseLevelGradient.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
+        
+        new Chart(noiseLevelCtx, {
+            type: 'line',
+            data: {
+                labels: ['0:00', '0:30', '1:00', '1:30', '2:00', '2:30'],
+                datasets: [{
+                    label: 'Background Noise (dB)',
+                    data: [25, 32, 28, 45, 30, 26],
+                    borderColor: '#fbbf24',
+                    backgroundColor: noiseLevelGradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fbbf24',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 60,
+                        ticks: { 
+                            color: '#9ca3af',
+                            callback: function(value) {
+                                return value + ' dB';
+                            }
+                        },
+                        grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                    }
+                }
+            }
+        });
+        
+        // Animate score gauge on load
+        window.addEventListener('load', () => {
+            const circle = document.getElementById('scoreCircle');
+            const score = 85;
+            const circumference = 2 * Math.PI * 90;
+            const offset = circumference - (score / 100) * circumference;
+            
+            setTimeout(() => {
+                circle.style.transition = 'stroke-dashoffset 2s ease-out';
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        });
+    </script>
+</body>
+</html>

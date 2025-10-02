@@ -19,7 +19,7 @@ DEFAULT_AUDIO_EXTENSION = '.wav'
 
 # OpenAI Configuration
 OPENAI_MODELS = {
-    'TRANSCRIPTION': 'gpt-4o-mini-transcribe',
+    'TRANSCRIPTION': 'gpt-4o-transcribe',
     'SUMMARY': 'gpt-4o-mini',
     'EVALUATION': 'gpt-4o-mini',
     'RECOMMENDATION': 'gpt-4o-mini'

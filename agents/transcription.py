@@ -39,7 +39,7 @@ class TranscriptionAgent:
             return 0.0
     
     def transcribe_audio(self, file_path: str, audio_url: Optional[str] = None) -> Dict[str, Any]:
-        """Transcribe audio file using OpenAI Whisper."""
+        """Transcribe audio file using OpenAI's gpt-4o-mini-transcribe model."""
         if not self.client:
             return {
                 "status": "error",
