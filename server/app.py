@@ -14,8 +14,13 @@ from utils.firebase import firebase_auth, firebase_db
 from utils.helpers import is_valid_google_drive_link, get_audio_file_identifier
 from agents.master import process_single_audio
 
-# Initialize Flask app
-app = Flask(__name__)
+# Set static folder path
+STATIC_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static')
+print(f"Static folder path: {STATIC_FOLDER}")
+print(f"Static folder exists: {os.path.exists(STATIC_FOLDER)}")
+
+# Initialize Flask app with static folder configuration
+app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path='/static')
 CORS(app)
 
 # JWT Configuration
@@ -28,14 +33,19 @@ jwt = JWTManager(app)
 # ============================================================================
 
 @app.route('/')
-def serve_index():
-    """Serve the main application page."""
-    return send_from_directory('../static', 'index.html')
+def serve_login():
+    """Serve the login page."""
+    return send_from_directory(STATIC_FOLDER, 'login.html')
 
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """Serve static files."""
-    return send_from_directory('../static', filename)
+@app.route('/upload')
+def serve_upload():
+    """Serve the upload page."""
+    return send_from_directory(STATIC_FOLDER, 'upload.html')
+
+@app.route('/dashboard')
+def serve_dashboard():
+    """Serve the dashboard UI (index2.html)."""
+    return send_from_directory(STATIC_FOLDER, 'index2.html')
 
 # ============================================================================
 # AUTHENTICATION ROUTES
@@ -255,6 +265,42 @@ def analyze_audio():
             'message': f'Analysis failed: {str(e)}'
         }), 500
 
+@app.route('/api/dashboard/data', methods=['GET'])
+def get_dashboard_data():
+    """Get formatted data for the dashboard UI (index2.html)."""
+    print("🎯 Dashboard data request received")
+    
+    try:
+        # Get the latest analysis result from query params or session
+        # For now, we'll return mock data structure that matches what the UI expects
+        # In production, you'd fetch this from database or session
+        
+        # This endpoint expects either:
+        # 1. A file_id parameter to fetch specific analysis
+        # 2. Or returns the most recent analysis for the user
+        
+        file_id = request.args.get('file_id')
+        
+        # TODO: Implement fetching from database
+        # For now, return structure that matches the UI expectations
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Dashboard data endpoint ready. Pass analysis results from /api/analyze to populate the UI.',
+            'data': {
+                'call_summary': None,
+                'call_transcript': None,
+                'actionable_insights': None
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Dashboard data error: {str(e)}")
+        return jsonify({
+            'status': 'error', 
+            'message': f'Failed to get dashboard data: {str(e)}'
+        }), 500
+
 # ============================================================================
 # HEALTH CHECK ROUTES
 # ============================================================================
@@ -269,7 +315,8 @@ def health_check():
         'features': {
             'authentication': True,
             'database': firebase_db.db is not None,
-            'ai_processing': True
+            'ai_processing': True,
+            'dashboard': True
         }
     })
 
@@ -390,6 +437,7 @@ if __name__ == '__main__':
     print("🔐 Authentication: Enabled")
     print("💾 Database: Firestore")
     print("🤖 AI Processing: Enabled")
+    print("📊 Dashboard: Enabled at /dashboard")
     
     host = load_env_variable('HOST', default='0.0.0.0')
     port = int(load_env_variable('PORT', default='5000'))
